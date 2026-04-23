@@ -1,0 +1,81 @@
+name: Build and upload release artifacts
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - platform: x86
+            suffix: Win32
+            out_dir: Release
+          - platform: x64
+            suffix: Win64
+            out_dir: x64/Release
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: microsoft/setup-msbuild@v3
+
+      - name: Update Version.h
+        shell: pwsh
+        run: |
+          $TAG_NAME = "${{ github.event.release.tag_name }}"
+          $VERSION = $TAG_NAME.TrimStart('v')
+          $TIMESTAMP = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          $REPO_NAME = "${{ github.event.repository.name }}"
+
+          $VERSION_CONTENT = @"
+          #pragma once
+
+          inline const char* const VERSION_STR = `"$VERSION`";
+          inline const char* const TIMESTAMP_STR = `"$TIMESTAMP`";
+          "@
+
+          $HeaderPath = Join-Path $REPO_NAME "Version.h"
+          Set-Content -Path $HeaderPath -Value $VERSION_CONTENT
+
+      - name: Build solution
+        shell: pwsh
+        run: |
+          msbuild ${{ github.event.repository.name }}.sln `
+            /p:Configuration=Release `
+            /p:Platform=${{ matrix.platform }}
+
+      - name: Package artifact
+        shell: pwsh
+        run: |
+          $REPO_NAME = "${{ github.event.repository.name }}"
+          $TAG_NAME = "${{ github.event.release.tag_name }}"
+          $VERSION = $TAG_NAME.TrimStart('v')
+
+          $BASE_NAME = "$REPO_NAME-$VERSION-${{ matrix.suffix }}-CLI"
+          $ZIP_NAME = "$BASE_NAME.zip"
+
+          New-Item -ItemType Directory -Path "dist/$BASE_NAME"
+
+          Copy-Item "${{ matrix.out_dir }}/$REPO_NAME.exe" "dist/$BASE_NAME/"
+
+          Copy-Item "LICENSE" "dist/$BASE_NAME/"
+          Copy-Item "*.md" "dist/$BASE_NAME/"
+
+          Compress-Archive -Path "dist/$BASE_NAME" -DestinationPath $ZIP_NAME
+
+          echo "ASSET_PATH=$ZIP_NAME" >> $env:GITHUB_ENV
+
+      - name: Upload asset
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $TAG_NAME = "${{ github.event.release.tag_name }}"
+          gh release upload $TAG_NAME $env:ASSET_PATH
