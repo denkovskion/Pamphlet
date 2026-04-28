@@ -39,14 +39,14 @@ std::vector<Problem> readAllProblems() {
     if (std::string token; tokens >> token) {
       std::map<Square, Piece> board;
       std::istringstream symbols(token);
-      int rank = 7;
-      for (; rank >= 0; --rank) {
-        int file = 0;
-        for (; file <= 7; ++file) {
+      int rank = 8;
+      for (; rank >= 1; --rank) {
+        int file = 1;
+        for (; file <= 8; ++file) {
           char symbol = symbols.get();
-          if (symbol >= '1' && symbol <= '8' - file) {
+          if (symbol >= '1' && symbol <= '8' - (file - 1)) {
             file += symbol - '0';
-            if (file > 7) {
+            if (file > 8) {
               break;
             }
             symbol = symbols.get();
@@ -79,10 +79,10 @@ std::vector<Problem> readAllProblems() {
             break;
           }
         }
-        if (file <= 7) {
+        if (file <= 8) {
           break;
         }
-        if (rank > 0) {
+        if (rank > 1) {
           if (symbols.get() != '/') {
             break;
           }
@@ -92,7 +92,7 @@ std::vector<Problem> readAllProblems() {
           }
         }
       }
-      if (rank < 0) {
+      if (rank < 1) {
         if (std::string token; tokens >> token) {
           if (std::regex_match(token, std::regex("[wb]"))) {
             bool blackToMove = false;
@@ -105,18 +105,18 @@ std::vector<Problem> readAllProblems() {
                 if (!(token == "-")) {
                   for (char symbol : token) {
                     if (symbol == 'K' || symbol == 'Q') {
-                      castlingOrigins.insert({4, 0});
+                      castlingOrigins.insert({5, 1});
                     } else if (symbol == 'k' || symbol == 'q') {
-                      castlingOrigins.insert({4, 7});
+                      castlingOrigins.insert({5, 8});
                     }
                     if (symbol == 'K') {
-                      castlingOrigins.insert({7, 0});
+                      castlingOrigins.insert({8, 1});
                     } else if (symbol == 'Q') {
-                      castlingOrigins.insert({0, 0});
+                      castlingOrigins.insert({1, 1});
                     } else if (symbol == 'k') {
-                      castlingOrigins.insert({7, 7});
+                      castlingOrigins.insert({8, 8});
                     } else if (symbol == 'q') {
-                      castlingOrigins.insert({0, 7});
+                      castlingOrigins.insert({1, 8});
                     }
                   }
                 }
@@ -124,8 +124,8 @@ std::vector<Problem> readAllProblems() {
                   if (std::regex_match(token, std::regex("[a-h][36]|-"))) {
                     std::optional<Square> enPassantTarget;
                     if (!(token == "-")) {
-                      int file = token.at(0) - 'a';
-                      int rank = token.at(1) - '1';
+                      int file = token.at(0) - 'a' + 1;
+                      int rank = token.at(1) - '1' + 1;
                       enPassantTarget = {file, rank};
                     }
                     if (std::string token; tokens >> token) {
@@ -192,9 +192,9 @@ std::vector<Problem> readAllProblems() {
 void write(const Problem& problem) {
   std::cout << std::string(42, '_') << std::endl;
   std::stringstream output;
-  for (int rank = 7; rank >= 0; --rank) {
-    output << (rank + 1);
-    for (int file = 0; file <= 7; ++file) {
+  for (int rank = 8; rank >= 1; --rank) {
+    output << rank;
+    for (int file = 1; file <= 8; ++file) {
       output << ' ';
       if (std::map<Square, Piece>::const_iterator entry =
               problem.position.board.find({file, rank});
@@ -224,26 +224,26 @@ void write(const Problem& problem) {
       }
     }
     switch (rank) {
-      case 7:
+      case 8:
         output << "    Side to move: "
                << (problem.position.blackToMove ? 'b' : 'w');
         break;
-      case 6:
+      case 7:
         output << "    Castling rights: ";
         if (!problem.position.castlingOrigins.empty()) {
-          if (problem.position.castlingOrigins.contains({4, 0})) {
-            if (problem.position.castlingOrigins.contains({7, 0})) {
+          if (problem.position.castlingOrigins.contains({5, 1})) {
+            if (problem.position.castlingOrigins.contains({8, 1})) {
               output << 'K';
             }
-            if (problem.position.castlingOrigins.contains({0, 0})) {
+            if (problem.position.castlingOrigins.contains({1, 1})) {
               output << 'Q';
             }
           }
-          if (problem.position.castlingOrigins.contains({4, 7})) {
-            if (problem.position.castlingOrigins.contains({7, 7})) {
+          if (problem.position.castlingOrigins.contains({5, 8})) {
+            if (problem.position.castlingOrigins.contains({8, 8})) {
               output << 'k';
             }
-            if (problem.position.castlingOrigins.contains({0, 7})) {
+            if (problem.position.castlingOrigins.contains({1, 8})) {
               output << 'q';
             }
           }
@@ -251,18 +251,18 @@ void write(const Problem& problem) {
           output << '-';
         }
         break;
-      case 5:
+      case 6:
         output << "    En passant target: ";
         if (problem.position.enPassantTarget) {
-          output << static_cast<char>('a' +
-                                      problem.position.enPassantTarget->file)
-                 << static_cast<char>('1' +
-                                      problem.position.enPassantTarget->rank);
+          output << static_cast<char>(
+                        'a' + problem.position.enPassantTarget->file - 1)
+                 << static_cast<char>(
+                        '1' + problem.position.enPassantTarget->rank - 1);
         } else {
           output << '-';
         }
         break;
-      case 3:
+      case 4:
         output << "    ";
         switch (problem.type) {
           case ProblemType::PERFT:

@@ -42,8 +42,8 @@ std::vector<Direction> computeDirections(const std::set<Direction>& bases);
 
 std::string toLanCode(const Square& square) {
   return std::string()
-      .append(1, 'a' + square.file)
-      .append(1, '1' + square.rank);
+      .append(1, 'a' + square.file - 1)
+      .append(1, '1' + square.rank - 1);
 }
 
 const char* toLanCode(const Piece& piece) {
@@ -80,22 +80,22 @@ void validate(const std::map<Square, Piece>& board, bool blackToMove,
     if (std::map<Square, Piece>::const_iterator entry =
             board.find(castlingOrigin);
         !(entry != board.cend() &&
-          (castlingOrigin.file == 4 && entry->second.type == PieceType::KING ||
-           (castlingOrigin.file == 0 || castlingOrigin.file == 7) &&
+          (castlingOrigin.file == 5 && entry->second.type == PieceType::KING ||
+           (castlingOrigin.file == 1 || castlingOrigin.file == 8) &&
                entry->second.type == PieceType::ROOK) &&
-          (castlingOrigin.rank == 0 && !entry->second.black ||
-           castlingOrigin.rank == 7 && entry->second.black))) {
+          (castlingOrigin.rank == 1 && !entry->second.black ||
+           castlingOrigin.rank == 8 && entry->second.black))) {
       throw std::invalid_argument("Not accepted castling rights");
     }
   }
   if (enPassantTarget) {
     if (std::map<Square, Piece>::const_iterator entry =
-            board.find({enPassantTarget->file, blackToMove ? 3 : 4});
-        !(enPassantTarget->rank == (blackToMove ? 2 : 5) &&
+            board.find({enPassantTarget->file, blackToMove ? 4 : 5});
+        !(enPassantTarget->rank == (blackToMove ? 3 : 6) &&
           entry != board.cend() && entry->second.type == PieceType::PAWN &&
           entry->second.black != blackToMove &&
           !board.contains(enPassantTarget.value()) &&
-          !board.contains({enPassantTarget->file, blackToMove ? 1 : 6}))) {
+          !board.contains({enPassantTarget->file, blackToMove ? 2 : 7}))) {
       throw std::invalid_argument("Not accepted en passant square");
     }
   }
@@ -136,8 +136,8 @@ int generateMoves(
           for (Square square = origin;;) {
             if (Square target = {square.file + direction.fileOffset,
                                  square.rank + direction.rankOffset};
-                target.file >= 0 && target.file <= 7 && target.rank >= 0 &&
-                target.rank <= 7) {
+                target.file >= 1 && target.file <= 8 && target.rank >= 1 &&
+                target.rank <= 8) {
               if (std::map<Square, Piece>::const_iterator other =
                       board.find(target);
                   other != board.cend()) {
@@ -232,8 +232,8 @@ int generateMoves(
         for (const Direction& direction : captureDirections) {
           if (Square target = {origin.file + direction.fileOffset,
                                origin.rank + direction.rankOffset};
-              target.file >= 0 && target.file <= 7 && target.rank >= 0 &&
-              target.rank <= 7) {
+              target.file >= 1 && target.file <= 8 && target.rank >= 1 &&
+              target.rank <= 8) {
             if (std::map<Square, Piece>::const_iterator other =
                     board.find(target);
                 other != board.cend()) {
@@ -246,7 +246,7 @@ int generateMoves(
                     return 0;
                   }
                 }
-                if (origin.rank == (piece.black ? 1 : 6)) {
+                if (origin.rank == (piece.black ? 2 : 7)) {
                   Piece pieces[] = {{PieceType::QUEEN, piece.black},
                                     {PieceType::ROOK, piece.black},
                                     {PieceType::BISHOP, piece.black},
@@ -286,10 +286,10 @@ int generateMoves(
         Direction direction = {0, piece.black ? -1 : 1};
         if (Square target = {origin.file + direction.fileOffset,
                              origin.rank + direction.rankOffset};
-            target.file >= 0 && target.file <= 7 && target.rank >= 0 &&
-            target.rank <= 7) {
+            target.file >= 1 && target.file <= 8 && target.rank >= 1 &&
+            target.rank <= 8) {
           if (!board.contains(target)) {
-            if (origin.rank == (piece.black ? 1 : 6)) {
+            if (origin.rank == (piece.black ? 2 : 7)) {
               Piece pieces[] = {{PieceType::QUEEN, piece.black},
                                 {PieceType::ROOK, piece.black},
                                 {PieceType::BISHOP, piece.black},
@@ -308,7 +308,7 @@ int generateMoves(
                                         .origin = origin,
                                         .target = target});
               }
-              if (origin.rank == (piece.black ? 6 : 1)) {
+              if (origin.rank == (piece.black ? 7 : 2)) {
                 Square target2 = {target.file + direction.fileOffset,
                                   target.rank + direction.rankOffset};
                 if (!board.contains(target2)) {
