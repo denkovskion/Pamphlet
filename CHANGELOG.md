@@ -1,6 +1,14 @@
 # Changelog
 
+## [1.1.0] - 2026-04-30
+
+### Added
+
+- Command-line option for verbose logging
+
 ## [1.0.1] - 2026-04-28
+
+### Changed
 
 - Square structure now uses 1-based indexing
 

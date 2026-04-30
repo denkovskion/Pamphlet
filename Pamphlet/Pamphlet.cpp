@@ -23,6 +23,7 @@
  */
 
 #include <exception>
+#include <format>
 #include <iostream>
 #include <regex>
 
@@ -47,22 +48,28 @@ int main(int argc, char* argv[]) {
   try {
     bool help = false;
     bool version = false;
+    bool verbose = false;
     for (int i = 1; i < argc; ++i) {
       std::string arg = argv[i];
       if (arg == "--help") {
         help = true;
       } else if (arg == "--version") {
         version = true;
-      } else if (std::regex_match(arg, std::regex("-[hV]+"))) {
+      } else if (arg == "--verbose") {
+        verbose = true;
+      } else if (std::regex_match(arg, std::regex("-[hVv]+"))) {
         for (char letter : arg.substr(1)) {
           if (letter == 'h') {
             help = true;
           } else if (letter == 'V') {
             version = true;
+          } else if (letter == 'v') {
+            verbose = true;
           }
         }
       } else {
-        pamphlet::logger(std::clog) << "Invalid argument: '" + arg + "'.\n";
+        pamphlet::logger(std::clog)
+            << std::format("Invalid argument: '{}'.\n", arg);
         return 1;
       }
     }
@@ -76,23 +83,27 @@ Chess mate searcher. Reads problems as EPD records (with one operation:
 Options:
   -h, --help       Show help and exit
   -V, --version    Show version and exit
+  -v, --verbose    Enable verbose logging
 )";
       return 0;
     }
     if (version) {
-      std::cout << std::string() + "Pamphlet " + VERSION_STR + PLATFORM_SFX +
-                       CONFIGURATION_SFX + "\n" + "Built on: " + TIMESTAMP_STR +
-                       "\n" + "Copyright (c) 2026 Ivan Denkovski\n" +
-                       "License: MIT\n";
+      std::cout << std::format(R"(Pamphlet {}{}{}
+Built on: {}
+Copyright (c) 2026 Ivan Denkovski
+License: MIT
+)",
+                               VERSION_STR, PLATFORM_SFX, CONFIGURATION_SFX,
+                               TIMESTAMP_STR);
       return 0;
     }
-    pamphlet::logger(std::clog) << std::string() + "Pamphlet " + VERSION_STR +
-                                       PLATFORM_SFX + CONFIGURATION_SFX +
-                                       " Copyright (c) 2026 Ivan Denkovski\n";
+    pamphlet::logger(std::clog)
+        << std::format("Pamphlet {}{}{} Copyright (c) 2026 Ivan Denkovski\n",
+                       VERSION_STR, PLATFORM_SFX, CONFIGURATION_SFX);
     std::vector<pamphlet::Problem> problems = pamphlet::readAllProblems();
     for (const pamphlet::Problem& problem : problems) {
       pamphlet::write(problem);
-      pamphlet::solve(problem);
+      pamphlet::solve(problem, verbose);
     }
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';

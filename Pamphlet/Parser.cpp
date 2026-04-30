@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <format>
 #include <iostream>
 #include <ostream>
 #include <regex>
@@ -169,8 +170,9 @@ std::vector<Problem> readAllProblems() {
                             }
                           }
                         } catch (const std::invalid_argument& error) {
-                          logger(std::cerr) << "Not accepted line: '" + line +
-                                                   "'. " + error.what() + ".\n";
+                          logger(std::cerr)
+                              << std::format("Not accepted line: '{}'. {}.\n",
+                                             line, error.what());
                           return {};
                         }
                       }
@@ -182,7 +184,7 @@ std::vector<Problem> readAllProblems() {
           }
         }
       }
-      logger(std::cerr) << "Invalid line: '" + line + "'.\n";
+      logger(std::cerr) << std::format("Invalid line: '{}'.\n", line);
       return {};
     }
   }

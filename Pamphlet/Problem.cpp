@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <chrono>
 #include <ctime>
+#include <format>
 #include <iomanip>
 #include <iostream>
 
@@ -35,35 +36,50 @@
 namespace pamphlet {
 
 unsigned long long count(int nPlies, const Position& position,
-                         const std::vector<Move>& pseudoLegalMoves);
+                         const std::vector<Move>& pseudoLegalMoves,
+                         bool verbose);
 int search(int nMoves, const Position& position,
            const std::vector<Move>& pseudoLegalMoves);
 
-void solve(const Problem& problem) {
+void solve(const Problem& problem, bool verbose) {
   logger(std::clog) << "Solving...\n";
   std::chrono::steady_clock::time_point begin =
       std::chrono::steady_clock::now();
   std::vector<Move> pseudoLegalMoves;
   if (isLegal(problem.position, pseudoLegalMoves)) {
     if (problem.type == ProblemType::PERFT) {
-      unsigned long long nNodes =
-          count(problem.nPlies.value(), problem.position, pseudoLegalMoves);
+      unsigned long long nNodes = count(
+          problem.nPlies.value(), problem.position, pseudoLegalMoves, verbose);
       std::cout << toFormatted({.type = NodeType::PERFT_NODE, .count = nNodes},
                                problem.position)
                 << std::endl;
     } else if (problem.type == ProblemType::MATE_SEARCH) {
       std::vector<Node> nodes;
       for (const Move& moveMax : pseudoLegalMoves) {
-        if (std::vector<Move> pseudoLegalMovesMin;
-            std::optional<Position> positionMin = make(
-                moveMax, problem.position, pseudoLegalMovesMin, std::nullopt)) {
-          for (int depth = 1; depth <= problem.nMoves.value(); depth++) {
+        std::vector<Move> pseudoLegalMovesMin;
+        std::ostringstream lanBuilder;
+        if (std::optional<Position> positionMin =
+                (verbose ? make(moveMax, problem.position, pseudoLegalMovesMin,
+                                lanBuilder)
+                         : make(moveMax, problem.position, pseudoLegalMovesMin,
+                                std::nullopt))) {
+          int depth = 1;
+          for (; depth <= problem.nMoves.value(); depth++) {
             if (search(depth, positionMin.value(), pseudoLegalMovesMin) == 1) {
               nodes.push_back({.type = NodeType::MATE_LEAF,
                                .move = moveMax,
                                .distance = depth});
               break;
             }
+          }
+          if (verbose) {
+            logger(std::clog)
+                << (depth <= problem.nMoves.value()
+                        ? std::format("Tried '{}'. Found mate in {}.\n",
+                                      lanBuilder.str(), depth)
+                        : std::format("Tried '{}'. No mate in {}.\n",
+                                      lanBuilder.str(),
+                                      problem.nMoves.value()));
           }
         }
       }
@@ -80,27 +96,39 @@ void solve(const Problem& problem) {
               << std::endl;
   }
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-  logger(std::clog)
-      << "Finished solving in " +
-             std::to_string(
-                 std::chrono::duration_cast<std::chrono::milliseconds>(end -
-                                                                       begin)
-                     .count()) +
-             "ms.\n";
+  logger(std::clog) << std::format(
+      "Finished solving in {}ms.\n",
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count());
 }
 
 unsigned long long count(int nPlies, const Position& position,
-                         const std::vector<Move>& pseudoLegalMoves) {
+                         const std::vector<Move>& pseudoLegalMoves,
+                         bool verbose) {
   if (nPlies == 0) {
     return 1;
   }
   unsigned long long nNodes = 0;
   for (const Move& move : pseudoLegalMoves) {
-    if (std::vector<Move> pseudoLegalMovesNext;
-        std::optional<Position> positionNext =
-            make(move, position, pseudoLegalMovesNext, std::nullopt)) {
-      nNodes += count(nPlies - 1, positionNext.value(), pseudoLegalMovesNext);
+    std::vector<Move> pseudoLegalMovesNext;
+    std::ostringstream lanBuilder;
+    if (std::optional<Position> positionNext =
+            (verbose
+                 ? make(move, position, pseudoLegalMovesNext, lanBuilder)
+                 : make(move, position, pseudoLegalMovesNext, std::nullopt))) {
+      unsigned long long nChildNodes =
+          count(nPlies - 1, positionNext.value(), pseudoLegalMovesNext, false);
+      nNodes += nChildNodes;
+      if (verbose) {
+        logger(std::clog) << std::format(
+            "Evaluated '{}'. Counted {} nodes at depth {}.\n", lanBuilder.str(),
+            nChildNodes, nPlies);
+      }
     }
+  }
+  if (verbose) {
+    logger(std::clog) << std::format(
+        "Finished counting. {} nodes at depth {}.\n", nNodes, nPlies);
   }
   return nNodes;
 }
