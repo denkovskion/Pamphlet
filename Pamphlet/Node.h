@@ -28,7 +28,15 @@
 
 namespace pamphlet {
 
-enum class NodeType { ILLEGAL_NODE, PERFT_NODE, MATE_ROOT, MATE_LEAF };
+enum class NodeType {
+  ILLEGAL_NODE,
+  DIVIDE_ROOT,
+  DIVIDE_LEAF,
+  PERFT_NODE,
+  MATE_ROOT,
+  MATE_BRANCH,
+  MATE_LEAF
+};
 
 struct Node {
   NodeType type;
@@ -38,6 +46,7 @@ struct Node {
   std::optional<std::vector<Node>> children;
 };
 
-std::string toFormatted(const Node& node, const Position& position);
+std::string toFormatted(const Node& node, const Position& position, int moveNo,
+                        bool inlyne);
 
 }  // namespace pamphlet

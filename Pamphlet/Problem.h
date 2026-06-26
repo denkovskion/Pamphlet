@@ -39,7 +39,7 @@ struct Problem {
   const std::optional<int> nMoves;
 };
 
-void solve(const Problem& problem, bool verbose);
+void solve(const Problem& problem, bool detailed, bool verbose);
 
 std::vector<Problem> readAllProblems();
 void write(const Problem& problem);

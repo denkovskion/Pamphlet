@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
   try {
     bool help = false;
     bool version = false;
+    bool detailed = false;
     bool verbose = false;
     for (int i = 1; i < argc; ++i) {
       std::string arg = argv[i];
@@ -55,14 +56,18 @@ int main(int argc, char* argv[]) {
         help = true;
       } else if (arg == "--version") {
         version = true;
+      } else if (arg == "--detailed") {
+        detailed = true;
       } else if (arg == "--verbose") {
         verbose = true;
-      } else if (std::regex_match(arg, std::regex("-[hVv]+"))) {
+      } else if (std::regex_match(arg, std::regex("-[hVdv]+"))) {
         for (char letter : arg.substr(1)) {
           if (letter == 'h') {
             help = true;
           } else if (letter == 'V') {
             version = true;
+          } else if (letter == 'd') {
+            detailed = true;
           } else if (letter == 'v') {
             verbose = true;
           }
@@ -83,6 +88,7 @@ Chess mate searcher. Reads problems as EPD records (with one operation:
 Options:
   -h, --help       Show help and exit
   -V, --version    Show version and exit
+  -d, --detailed   Enable detailed analysis
   -v, --verbose    Enable verbose logging
 )";
       return 0;
@@ -103,7 +109,7 @@ License: MIT
     std::vector<pamphlet::Problem> problems = pamphlet::readAllProblems();
     for (const pamphlet::Problem& problem : problems) {
       pamphlet::write(problem);
-      pamphlet::solve(problem, verbose);
+      pamphlet::solve(problem, detailed, verbose);
     }
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n';

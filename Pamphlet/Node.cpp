@@ -28,10 +28,19 @@
 
 namespace pamphlet {
 
-std::string toFormatted(const Node& node, const Position& position) {
+std::string toFormatted(const Node& node, const Position& position, int moveNo,
+                        bool inlyne) {
   std::stringstream output;
   if (node.type == NodeType::ILLEGAL_NODE) {
     output << "Illegal position";
+  } else if (node.type == NodeType::DIVIDE_ROOT) {
+    for (const Node& child : node.children.value()) {
+      output << toFormatted(child, position, moveNo, false) << "\n";
+    }
+    output << node.count.value();
+  } else if (node.type == NodeType::DIVIDE_LEAF) {
+    make(node.move.value(), position, std::nullopt, output);
+    output << " " << node.count.value();
   } else if (node.type == NodeType::PERFT_NODE) {
     output << node.count.value();
   } else if (node.type == NodeType::MATE_ROOT) {
@@ -39,7 +48,33 @@ std::string toFormatted(const Node& node, const Position& position) {
       if (!first) {
         output << "\n";
       }
-      output << toFormatted(child, position);
+      output << toFormatted(child, position, moveNo, false);
+      first = false;
+    }
+  } else if (node.type == NodeType::MATE_BRANCH) {
+    if (position.blackToMove) {
+      if (!inlyne) {
+        output << moveNo << "...";
+      }
+    } else {
+      output << moveNo << ".";
+    }
+    std::optional<Position> positionNext =
+        make(node.move.value(), position, std::nullopt, output);
+    for (bool first = true; const Node& child : node.children.value()) {
+      if (first) {
+        output << " ";
+      } else {
+        output << "\n";
+        for (int i = 0;
+             i < (positionNext.value().blackToMove ? moveNo - 1 : moveNo);
+             ++i) {
+          output << "\t";
+        }
+      }
+      output << toFormatted(
+          child, positionNext.value(),
+          positionNext.value().blackToMove ? moveNo : moveNo + 1, first);
       first = false;
     }
   } else if (node.type == NodeType::MATE_LEAF) {

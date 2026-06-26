@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] - 2026-06-26
+
+### Added
+
+- Command-line option for detailed analysis
+
 ## [1.1.0] - 2026-04-30
 
 ### Added
