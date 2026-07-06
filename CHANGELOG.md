@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.1] - 2026-07-06
+
+- Maintenance release
+
 ## [1.2.0] - 2026-06-26
 
 ### Added

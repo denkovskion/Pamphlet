@@ -35,31 +35,15 @@ std::optional<Position> make(
   bool preLegal = false;
   switch (move.type) {
     case MoveType::NULL_MOVE:
-      if (lanBuilder) {
-        lanBuilder->get() << "null";
-      }
       preLegal = true;
       break;
     case MoveType::QUIET_MOVE:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "-"
-                          << toLanCode(move.target.value());
-      }
       preLegal = true;
       break;
     case MoveType::CAPTURE:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "x"
-                          << toLanCode(move.target.value());
-      }
       preLegal = true;
       break;
     case MoveType::LONG_CASTLING:
-      if (lanBuilder) {
-        lanBuilder->get() << "0-0-0";
-      }
       if (make({.type = MoveType::NULL_MOVE}, position, std::nullopt,
                std::nullopt)) {
         if (make({.type = MoveType::QUIET_MOVE,
@@ -71,9 +55,6 @@ std::optional<Position> make(
       }
       break;
     case MoveType::SHORT_CASTLING:
-      if (lanBuilder) {
-        lanBuilder->get() << "0-0";
-      }
       if (make({.type = MoveType::NULL_MOVE}, position, std::nullopt,
                std::nullopt)) {
         if (make({.type = MoveType::QUIET_MOVE,
@@ -85,37 +66,15 @@ std::optional<Position> make(
       }
       break;
     case MoveType::DOUBLE_STEP:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "-"
-                          << toLanCode(move.target.value());
-      }
       preLegal = true;
       break;
     case MoveType::EN_PASSANT:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "x"
-                          << toLanCode(move.target.value()) << " e.p.";
-      }
       preLegal = true;
       break;
     case MoveType::PROMOTION:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "-"
-                          << toLanCode(move.target.value()) << "="
-                          << toLanCode(move.promoted.value());
-      }
       preLegal = true;
       break;
     case MoveType::PROMOTION_CAPTURE:
-      if (lanBuilder) {
-        lanBuilder->get() << toLanCode(position.board.at(move.origin.value()))
-                          << toLanCode(move.origin.value()) << "x"
-                          << toLanCode(move.target.value()) << "="
-                          << toLanCode(move.promoted.value());
-      }
       preLegal = true;
       break;
   }
@@ -123,6 +82,55 @@ std::optional<Position> make(
     Position result = doMake(move, position);
     if (isLegal(result, pseudoLegalMoves)) {
       if (lanBuilder) {
+        switch (move.type) {
+          case MoveType::NULL_MOVE:
+            lanBuilder->get() << "null";
+            break;
+          case MoveType::QUIET_MOVE:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "-"
+                << toLanCode(move.target.value());
+            break;
+          case MoveType::CAPTURE:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "x"
+                << toLanCode(move.target.value());
+            break;
+          case MoveType::LONG_CASTLING:
+            lanBuilder->get() << "0-0-0";
+            break;
+          case MoveType::SHORT_CASTLING:
+            lanBuilder->get() << "0-0";
+            break;
+          case MoveType::DOUBLE_STEP:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "-"
+                << toLanCode(move.target.value());
+            break;
+          case MoveType::EN_PASSANT:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "x"
+                << toLanCode(move.target.value()) << " e.p.";
+            break;
+          case MoveType::PROMOTION:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "-"
+                << toLanCode(move.target.value()) << "="
+                << toLanCode(move.promoted.value());
+            break;
+          case MoveType::PROMOTION_CAPTURE:
+            lanBuilder->get()
+                << toLanCode(position.board.at(move.origin.value()))
+                << toLanCode(move.origin.value()) << "x"
+                << toLanCode(move.target.value()) << "="
+                << toLanCode(move.promoted.value());
+            break;
+        }
         std::vector<Move> pseudoLegalMovesNext;
         if (pseudoLegalMoves) {
           pseudoLegalMovesNext = pseudoLegalMoves->get();
