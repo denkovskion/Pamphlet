@@ -24,7 +24,6 @@
 
 #include <format>
 #include <iostream>
-#include <ostream>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
@@ -191,8 +190,7 @@ std::vector<Problem> readAllProblems() {
   return problems;
 }
 
-void write(const Problem& problem) {
-  std::cout << std::string(42, '_') << std::endl;
+std::string toFormattedString(const Problem& problem) {
   std::stringstream output;
   for (int rank = 8; rank >= 1; --rank) {
     output << rank;
@@ -282,8 +280,7 @@ void write(const Problem& problem) {
   for (char file = 'a'; file <= 'h'; ++file) {
     output << ' ' << file;
   }
-  std::cout << output.str() << std::endl;
-  std::cout << std::endl;
+  return output.str();
 }
 
 }  // namespace pamphlet

@@ -42,7 +42,7 @@ struct Problem {
 void solve(const Problem& problem, bool detailed, bool verbose);
 
 std::vector<Problem> readAllProblems();
-void write(const Problem& problem);
+std::string toFormattedString(const Problem& problem);
 
 std::ostream& logger(std::ostream& output);
 

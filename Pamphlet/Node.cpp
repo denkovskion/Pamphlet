@@ -28,14 +28,14 @@
 
 namespace pamphlet {
 
-std::string toFormatted(const Node& node, const Position& position, int moveNo,
-                        bool inlyne) {
+std::string toFormattedString(const Node& node, const Position& position,
+                              int moveNo, bool inlyne) {
   std::stringstream output;
   if (node.type == NodeType::ILLEGAL_NODE) {
     output << "Illegal position";
   } else if (node.type == NodeType::DIVIDE_ROOT) {
     for (const Node& child : node.children.value()) {
-      output << toFormatted(child, position, moveNo, false) << "\n";
+      output << toFormattedString(child, position, moveNo, false) << "\n";
     }
     output << node.count.value();
   } else if (node.type == NodeType::DIVIDE_LEAF) {
@@ -48,7 +48,7 @@ std::string toFormatted(const Node& node, const Position& position, int moveNo,
       if (!first) {
         output << "\n";
       }
-      output << toFormatted(child, position, moveNo, false);
+      output << toFormattedString(child, position, moveNo, false);
       first = false;
     }
   } else if (node.type == NodeType::MATE_BRANCH) {
@@ -72,7 +72,7 @@ std::string toFormatted(const Node& node, const Position& position, int moveNo,
           output << "\t";
         }
       }
-      output << toFormatted(
+      output << toFormattedString(
           child, positionNext.value(),
           positionNext.value().blackToMove ? moveNo : moveNo + 1, first);
       first = false;

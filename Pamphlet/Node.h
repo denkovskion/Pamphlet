@@ -46,7 +46,7 @@ struct Node {
   std::optional<std::vector<Node>> children;
 };
 
-std::string toFormatted(const Node& node, const Position& position, int moveNo,
-                        bool inlyne);
+std::string toFormattedString(const Node& node, const Position& position,
+                              int moveNo, bool inlyne);
 
 }  // namespace pamphlet

@@ -108,7 +108,6 @@ License: MIT
                        VERSION_STR, PLATFORM_SFX, CONFIGURATION_SFX);
     std::vector<pamphlet::Problem> problems = pamphlet::readAllProblems();
     for (const pamphlet::Problem& problem : problems) {
-      pamphlet::write(problem);
       pamphlet::solve(problem, detailed, verbose);
     }
   } catch (const std::exception& error) {
