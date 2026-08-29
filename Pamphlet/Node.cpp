@@ -65,12 +65,10 @@ std::string toFormattedString(const Node& node, const Position& position,
       if (first) {
         output << " ";
       } else {
-        output << "\n";
-        for (int i = 0;
-             i < (positionNext.value().blackToMove ? moveNo - 1 : moveNo);
-             ++i) {
-          output << "\t";
-        }
+        output << "\n"
+               << std::string(
+                      positionNext.value().blackToMove ? moveNo - 1 : moveNo,
+                      '\t');
       }
       output << toFormattedString(
           child, positionNext.value(),

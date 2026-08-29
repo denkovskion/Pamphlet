@@ -24,9 +24,13 @@
 
 #include "Move.h"
 
+#include <algorithm>
+#include <format>
+#include <iterator>
+
 namespace pamphlet {
 
-Position doMake(const Move& move, Position position);
+Position make(const Move& move, Position position);
 
 std::optional<Position> make(
     const Move& move, const Position& position,
@@ -79,56 +83,57 @@ std::optional<Position> make(
       break;
   }
   if (preLegal) {
-    Position result = doMake(move, position);
+    Position result = make(move, position);
     if (isLegal(result, pseudoLegalMoves)) {
       if (lanBuilder) {
+        std::ostreambuf_iterator<char> it(lanBuilder->get());
         switch (move.type) {
           case MoveType::NULL_MOVE:
-            lanBuilder->get() << "null";
+            std::format_to(it, "null");
             break;
           case MoveType::QUIET_MOVE:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "-"
-                << toLanCode(move.target.value());
+            std::format_to(it, "{}{}-{}",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()));
             break;
           case MoveType::CAPTURE:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "x"
-                << toLanCode(move.target.value());
+            std::format_to(it, "{}{}x{}",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()));
             break;
           case MoveType::LONG_CASTLING:
-            lanBuilder->get() << "0-0-0";
+            std::format_to(it, "0-0-0");
             break;
           case MoveType::SHORT_CASTLING:
-            lanBuilder->get() << "0-0";
+            std::format_to(it, "0-0");
             break;
           case MoveType::DOUBLE_STEP:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "-"
-                << toLanCode(move.target.value());
+            std::format_to(it, "{}{}-{}",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()));
             break;
           case MoveType::EN_PASSANT:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "x"
-                << toLanCode(move.target.value()) << " e.p.";
+            std::format_to(it, "{}{}x{} e.p.",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()));
             break;
           case MoveType::PROMOTION:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "-"
-                << toLanCode(move.target.value()) << "="
-                << toLanCode(move.promoted.value());
+            std::format_to(it, "{}{}-{}={}",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()),
+                           toLanCode(move.promoted.value()));
             break;
           case MoveType::PROMOTION_CAPTURE:
-            lanBuilder->get()
-                << toLanCode(position.board.at(move.origin.value()))
-                << toLanCode(move.origin.value()) << "x"
-                << toLanCode(move.target.value()) << "="
-                << toLanCode(move.promoted.value());
+            std::format_to(it, "{}{}x{}={}",
+                           toLanCode(position.board.at(move.origin.value())),
+                           toLanCode(move.origin.value()),
+                           toLanCode(move.target.value()),
+                           toLanCode(move.promoted.value()));
             break;
         }
         std::vector<Move> pseudoLegalMovesNext;
@@ -146,22 +151,22 @@ std::optional<Position> make(
             break;
           }
         }
-        Position opposite = doMake({.type = MoveType::NULL_MOVE}, result);
+        Position opposite = make({.type = MoveType::NULL_MOVE}, result);
         int legal = generateMoves(opposite.board, opposite.blackToMove,
                                   opposite.castlingOrigins,
                                   opposite.enPassantTarget, std::nullopt, true);
         if (terminal) {
           if (legal == 1) {
-            lanBuilder->get() << "=";
+            it = '=';
           } else {
             if (legal < -1) {
-              lanBuilder->get() << std::string(-legal, '+');
+              std::fill_n(it, -legal, '+');
             }
-            lanBuilder->get() << "#";
+            it = '#';
           }
         } else {
           if (legal < 0) {
-            lanBuilder->get() << std::string(-legal, '+');
+            std::fill_n(it, -legal, '+');
           }
         }
       }
@@ -171,7 +176,7 @@ std::optional<Position> make(
   return std::nullopt;
 }
 
-Position doMake(const Move& move, Position position) {
+Position make(const Move& move, Position position) {
   switch (move.type) {
     case MoveType::NULL_MOVE:
       position.enPassantTarget.reset();

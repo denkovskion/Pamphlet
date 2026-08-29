@@ -56,7 +56,6 @@ void solve(const Problem& problem, bool detailed, bool verbose) {
                                  : "Solving...\n");
   std::chrono::steady_clock::time_point begin =
       std::chrono::steady_clock::now();
-  Node solution;
   if (std::vector<Move> pseudoLegalMoves;
       isLegal(problem.position, pseudoLegalMoves)) {
     if (problem.type == ProblemType::PERFT) {
@@ -65,25 +64,34 @@ void solve(const Problem& problem, bool detailed, bool verbose) {
         unsigned long long nNodes =
             count(problem.position, problem.nPlies.value(), pseudoLegalMoves,
                   nodes, verbose);
-        solution = {
-            .type = NodeType::DIVIDE_ROOT, .count = nNodes, .children = nodes};
+        std::cout << toFormattedString({.type = NodeType::DIVIDE_ROOT,
+                                        .count = nNodes,
+                                        .children = nodes},
+                                       problem.position, 1, false)
+                  << std::endl;
       } else {
         unsigned long long nNodes =
             count(problem.position, problem.nPlies.value(), pseudoLegalMoves,
                   std::nullopt, verbose);
-        solution = {.type = NodeType::PERFT_NODE, .count = nNodes};
+        std::cout << toFormattedString(
+                         {.type = NodeType::PERFT_NODE, .count = nNodes},
+                         problem.position, 1, false)
+                  << std::endl;
       }
     } else if (problem.type == ProblemType::MATE_SEARCH) {
       std::vector<Node> nodes =
           analyse(problem.position, problem.nMoves.value(), pseudoLegalMoves,
                   detailed, verbose);
-      solution = {.type = NodeType::MATE_ROOT, .children = nodes};
+      std::cout << toFormattedString(
+                       {.type = NodeType::MATE_ROOT, .children = nodes},
+                       problem.position, 1, false)
+                << std::endl;
     }
   } else {
-    solution = {.type = NodeType::ILLEGAL_NODE};
+    std::cout << toFormattedString({.type = NodeType::ILLEGAL_NODE},
+                                   problem.position, 1, false)
+              << std::endl;
   }
-  std::cout << toFormattedString(solution, problem.position, 1, false)
-            << std::endl;
   std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
   logger(std::clog) << std::format(
       "Finished solving in {}ms.\n",
@@ -91,7 +99,7 @@ void solve(const Problem& problem, bool detailed, bool verbose) {
           .count());
 }
 
-unsigned long long pamphlet::count(
+unsigned long long count(
     const Position& position, int nPlies,
     const std::vector<Move>& pseudoLegalMoves,
     std::optional<std::reference_wrapper<std::vector<Node>>> nodes,
@@ -227,9 +235,8 @@ std::vector<Node> analyse(const Position& position, int nMoves,
   return nodes;
 }
 
-int pamphlet::searchMax(const Position& positionMax, int nMoves,
-                        const std::vector<Move>& pseudoLegalMovesMax,
-                        bool detailed) {
+int searchMax(const Position& positionMax, int nMoves,
+              const std::vector<Move>& pseudoLegalMovesMax, bool detailed) {
   int max = -1;
   for (const Move& moveMax : pseudoLegalMovesMax) {
     if (std::vector<Move> pseudoLegalMovesMin;
@@ -248,9 +255,8 @@ int pamphlet::searchMax(const Position& positionMax, int nMoves,
   return max;
 }
 
-int pamphlet::searchMin(const Position& positionMin, int nMoves,
-                        const std::vector<Move>& pseudoLegalMovesMin,
-                        bool detailed) {
+int searchMin(const Position& positionMin, int nMoves,
+              const std::vector<Move>& pseudoLegalMovesMin, bool detailed) {
   int min = 0;
   if (nMoves == 1) {
     for (const Move& moveMin : pseudoLegalMovesMin) {
