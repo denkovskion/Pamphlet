@@ -46,59 +46,12 @@ std::string toLanCode(const Square& square) {
       .append(1, '1' + square.rank - 1);
 }
 
-const char* toLanCode(const Piece& piece) {
-  switch (piece.type) {
-    case PieceType::KING:
-      return "K";
-    case PieceType::QUEEN:
-      return "Q";
-    case PieceType::ROOK:
-      return "R";
-    case PieceType::BISHOP:
-      return "B";
-    case PieceType::KNIGHT:
-      return "N";
-    case PieceType::PAWN:
-      return "";
-  }
-  return nullptr;
-}
-
-void validate(const std::map<Square, Piece>& board, bool blackToMove,
-              const std::set<Square>& castlingOrigins,
-              const std::optional<Square>& enPassantTarget) {
-  for (bool black : {false, true}) {
-    if (!(std::count_if(board.cbegin(), board.cend(),
-                        [black](const std::pair<Square, Piece>& entry) {
-                          return entry.second.black == black &&
-                                 entry.second.type == PieceType::KING;
-                        }) == 1)) {
-      throw std::invalid_argument("Not accepted number of kings");
-    }
-  }
-  for (const Square& castlingOrigin : castlingOrigins) {
-    if (std::map<Square, Piece>::const_iterator entry =
-            board.find(castlingOrigin);
-        !(entry != board.cend() &&
-          (castlingOrigin.file == 5 && entry->second.type == PieceType::KING ||
-           (castlingOrigin.file == 1 || castlingOrigin.file == 8) &&
-               entry->second.type == PieceType::ROOK) &&
-          (castlingOrigin.rank == 1 && !entry->second.black ||
-           castlingOrigin.rank == 8 && entry->second.black))) {
-      throw std::invalid_argument("Not accepted castling rights");
-    }
-  }
-  if (enPassantTarget) {
-    if (std::map<Square, Piece>::const_iterator entry =
-            board.find({enPassantTarget->file, blackToMove ? 4 : 5});
-        !(enPassantTarget->rank == (blackToMove ? 3 : 6) &&
-          entry != board.cend() && entry->second.type == PieceType::PAWN &&
-          entry->second.black != blackToMove &&
-          !board.contains(enPassantTarget.value()) &&
-          !board.contains({enPassantTarget->file, blackToMove ? 2 : 7}))) {
-      throw std::invalid_argument("Not accepted en passant square");
-    }
-  }
+std::string_view toLanCode(const Piece& piece) {
+  static const std::map<PieceType, std::string_view> lanCodes = {
+      {PieceType::KING, "K"},   {PieceType::QUEEN, "Q"},
+      {PieceType::ROOK, "R"},   {PieceType::BISHOP, "B"},
+      {PieceType::KNIGHT, "N"}, {PieceType::PAWN, ""}};
+  return lanCodes.at(piece.type);
 }
 
 int generateMoves(
@@ -106,7 +59,7 @@ int generateMoves(
     const std::set<Square>& castlingOrigins,
     const std::optional<Square>& enPassantTarget,
     std::optional<std::reference_wrapper<std::vector<Move>>> moves,
-    bool count) {
+    bool countChecks) {
   int nChecks = 0;
   for (const std::pair<Square, Piece>& entry : board) {
     if (const Piece& piece = entry.second; piece.black == blackToMove) {
@@ -144,7 +97,7 @@ int generateMoves(
                 if (const Piece& captured = other->second;
                     captured.black != piece.black) {
                   if (captured.type == PieceType::KING) {
-                    if (count) {
+                    if (countChecks) {
                       ++nChecks;
                     } else {
                       return 0;
@@ -240,7 +193,7 @@ int generateMoves(
               if (const Piece& captured = other->second;
                   captured.black != piece.black) {
                 if (captured.type == PieceType::KING) {
-                  if (count) {
+                  if (countChecks) {
                     ++nChecks;
                   } else {
                     return 0;
@@ -340,6 +293,43 @@ std::vector<Direction> computeDirections(const std::set<Direction>& bases) {
     }
   }
   return std::vector<Direction>(directions.cbegin(), directions.cend());
+}
+
+void validate(const std::map<Square, Piece>& board, bool blackToMove,
+              const std::set<Square>& castlingOrigins,
+              const std::optional<Square>& enPassantTarget) {
+  for (bool black : {false, true}) {
+    if (!(std::count_if(board.cbegin(), board.cend(),
+                        [black](const std::pair<Square, Piece>& entry) {
+                          return entry.second.black == black &&
+                                 entry.second.type == PieceType::KING;
+                        }) == 1)) {
+      throw std::invalid_argument("Not accepted number of kings");
+    }
+  }
+  for (const Square& castlingOrigin : castlingOrigins) {
+    if (std::map<Square, Piece>::const_iterator entry =
+            board.find(castlingOrigin);
+        !(entry != board.cend() &&
+          (castlingOrigin.file == 5 && entry->second.type == PieceType::KING ||
+           (castlingOrigin.file == 1 || castlingOrigin.file == 8) &&
+               entry->second.type == PieceType::ROOK) &&
+          (castlingOrigin.rank == 1 && !entry->second.black ||
+           castlingOrigin.rank == 8 && entry->second.black))) {
+      throw std::invalid_argument("Not accepted castling rights");
+    }
+  }
+  if (enPassantTarget) {
+    if (std::map<Square, Piece>::const_iterator entry =
+            board.find({enPassantTarget->file, blackToMove ? 4 : 5});
+        !(enPassantTarget->rank == (blackToMove ? 3 : 6) &&
+          entry != board.cend() && entry->second.type == PieceType::PAWN &&
+          entry->second.black != blackToMove &&
+          !board.contains(enPassantTarget.value()) &&
+          !board.contains({enPassantTarget->file, blackToMove ? 2 : 7}))) {
+      throw std::invalid_argument("Not accepted en passant square");
+    }
+  }
 }
 
 }  // namespace pamphlet

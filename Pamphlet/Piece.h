@@ -30,6 +30,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace pamphlet {
@@ -49,7 +50,7 @@ struct Piece {
 };
 
 std::string toLanCode(const Square& square);
-const char* toLanCode(const Piece& piece);
+std::string_view toLanCode(const Piece& piece);
 
 void validate(const std::map<Square, Piece>& board, bool blackToMove,
               const std::set<Square>& castlingOrigins,
@@ -61,6 +62,7 @@ int generateMoves(
     const std::map<Square, Piece>& board, bool blackToMove,
     const std::set<Square>& castlingOrigins,
     const std::optional<Square>& enPassantTarget,
-    std::optional<std::reference_wrapper<std::vector<Move>>> moves, bool count);
+    std::optional<std::reference_wrapper<std::vector<Move>>> moves,
+    bool countChecks);
 
 }  // namespace pamphlet

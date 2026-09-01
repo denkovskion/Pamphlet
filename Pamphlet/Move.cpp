@@ -83,8 +83,8 @@ std::optional<Position> make(
       break;
   }
   if (preLegal) {
-    Position result = make(move, position);
-    if (isLegal(result, pseudoLegalMoves)) {
+    if (Position result = make(move, position);
+        isLegal(result, pseudoLegalMoves)) {
       if (lanBuilder) {
         std::ostreambuf_iterator<char> it(lanBuilder->get());
         switch (move.type) {
